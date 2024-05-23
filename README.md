@@ -1,1 +1,1 @@
-# exercices_sql_bsi
+# Exercices de SQL réalisés dans le cadre de mon Bachelor SI
