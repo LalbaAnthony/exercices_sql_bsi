@@ -118,3 +118,78 @@ FROM (SELECT N_POSTE
       FROM INSTALLER 
       GROUP BY N_POSTE 
       HAVING COUNT(N_LOG) = 2) AS TEMP;
+
+-- 25/ Types de poste qui n’existent pas sur les réseaux du parc informatique
+SELECT DISTINCT TYPE_P 
+FROM POSTE 
+WHERE TYPE_P NOT IN (SELECT DISTINCT TYPE_P FROM LOGICIEL);
+
+-- 26/ Types se retrouvant à la fois comme type de poste et comme type de logiciel
+SELECT DISTINCT TYPE_P 
+FROM POSTE 
+WHERE TYPE_P IN (SELECT DISTINCT TYPE_L FROM LOGICIEL);
+
+-- 27/ Types qui existent en tant que poste de travail mais qui ne concernent aucun logiciel
+SELECT DISTINCT TYPE_P 
+FROM POSTE 
+WHERE TYPE_P NOT IN (SELECT DISTINCT TYPE_L FROM LOGICIEL);
+
+-- 28/ Adresses IP des postes qui contiennent le logiciel log6
+SELECT CONCAT('130.120.80.', AD) AS IP_COMPLETE 
+FROM POSTE 
+WHERE N_POSTE IN (SELECT N_POSTE FROM INSTALLER WHERE N_LOG = 'log6');
+
+-- 29/ Adresses IP des postes qui contiennent le logiciel de nom Oracle 8
+SELECT CONCAT('130.120.80.', AD) AS IP_COMPLETE 
+FROM POSTE 
+WHERE N_POSTE IN (SELECT N_POSTE FROM INSTALLER WHERE N_LOG = (SELECT N_LOG FROM LOGICIEL WHERE NOM_L = 'Oracle 8'));
+
+-- 30/ Noms des salles où on peut trouver au moins un poste avec le logiciel Oracle installé
+SELECT DISTINCT NOM_S 
+FROM SALLE 
+WHERE N_SALLE IN (SELECT DISTINCT N_SALLE FROM POSTE WHERE N_POSTE IN (SELECT N_POSTE FROM INSTALLER WHERE N_LOG IN (SELECT N_LOG FROM LOGICIEL WHERE NOM_L LIKE 'Oracle%')));
+
+-- 31/ Adresses IP des postes qui contiennent le logiciel log6 (Duplicate of 28)
+SELECT CONCAT('130.120.80.', AD) AS IP_COMPLETE 
+FROM POSTE 
+WHERE N_POSTE IN (SELECT N_POSTE FROM INSTALLER WHERE N_LOG = 'log6');
+
+-- 32/ Adresses IP des postes qui contiennent le logiciel de nom Oracle 8 (Duplicate of 29)
+SELECT CONCAT('130.120.80.', AD) AS IP_COMPLETE 
+FROM POSTE 
+WHERE N_POSTE IN (SELECT N_POSTE FROM INSTALLER WHERE N_LOG = (SELECT N_LOG FROM LOGICIEL WHERE NOM_L = 'Oracle 8'));
+
+-- 33/ Numéro et nom des segments possédant exactement trois postes de type TX
+SELECT N_SEGMENT, (SELECT NOM_SEGMENT FROM SEGMENT WHERE SEGMENT.N_SEGMENT = POSTE.N_SEGMENT) AS NOM_SEGMENT 
+FROM POSTE 
+WHERE TYPE_P = 'TX' 
+GROUP BY N_SEGMENT 
+HAVING COUNT(*) = 3;
+
+-- 34/ Noms des salles où on peut trouver au moins un poste avec le logiciel Oracle 7 installé
+SELECT DISTINCT NOM_S 
+FROM SALLE 
+WHERE N_SALLE IN (SELECT N_SALLE FROM POSTE WHERE N_POSTE IN (SELECT N_POSTE FROM INSTALLER WHERE N_LOG = (SELECT N_LOG FROM LOGICIEL WHERE NOM_L = 'Oracle 7')));
+
+-- 35/ Liste complète des installations triées par numéro de segment, numéro de salle et adresse IP
+SELECT SEGMENT.N_SEGMENT, SALLE.N_SALLE, CONCAT('130.120.80.', POSTE.AD) AS IP_COMPLETE, INSTALLER.N_LOG, INSTALLER.DATE_INS 
+FROM INSTALLER 
+JOIN POSTE ON INSTALLER.N_POSTE = POSTE.N_POSTE 
+JOIN SALLE ON POSTE.N_SALLE = SALLE.N_SALLE 
+JOIN SEGMENT ON POSTE.N_SEGMENT = SEGMENT.N_SEGMENT 
+ORDER BY SEGMENT.N_SEGMENT, SALLE.N_SALLE, POSTE.AD;
+
+-- 36/ Afficher le nom des salles où on peut trouver au moins deux postes avec le logiciel oracle7 installé
+SELECT NOM_S 
+FROM SALLE 
+WHERE N_SALLE IN (
+    SELECT N_SALLE 
+    FROM POSTE 
+    WHERE N_POSTE IN (
+        SELECT N_POSTE 
+        FROM INSTALLER 
+        WHERE N_LOG = (SELECT N_LOG FROM LOGICIEL WHERE NOM_L = 'Oracle 7')
+        GROUP BY N_POSTE 
+        HAVING COUNT(*) >= 2
+    )
+);
