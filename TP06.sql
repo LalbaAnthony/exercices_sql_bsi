@@ -1,13 +1,17 @@
 
--- Création de la base de données d'un réseau social nommé social_network
+-- ? Création de la base de données d'un réseau social nommé social_network
 
 -- ? ====================================
+-- ?
+-- ? Sommaire:
+-- ?
 -- ? Création des tables de la base de données
 -- ? Insertion des données dans les tables
 -- ? Vérification des données insérées
 -- ? Création des vues
 -- ? Création des utilisateurs
 -- ? Exemple de requêtes
+-- ?
 -- ? ====================================
 
 CREATE DATABASE IF NOT EXISTS social_network;
@@ -121,12 +125,13 @@ CREATE TABLE likes (
 #------------------------------------------------------------
 
 CREATE TABLE notifications (
-    notification_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
+    notification_id INT AUTO_INCREMENT NOT NULL UNIQUE,
+    user_id INT NOT NULL,
     message TEXT NOT NULL,
-    read BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    seen BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at DATETIME NOT NULL DEFAULT NOW(),
+    CONSTRAINT notification_PK PRIMARY KEY (notification_id),
+    CONSTRAINT notification_user_FK FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
 #------------------------------------------------------------
@@ -134,14 +139,15 @@ CREATE TABLE notifications (
 #------------------------------------------------------------   
 
 CREATE TABLE messages (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT NOT NULL UNIQUE,
     sender_id INT,
     receiver_id INT,
     content TEXT NOT NULL,
     read_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (sender_id) REFERENCES users(id),
-    FOREIGN KEY (receiver_id) REFERENCES users(id)
+    created_at DATETIME NOT NULL DEFAULT NOW(),
+    CONSTRAINT message_PK PRIMARY KEY (id),
+    CONSTRAINT message_sender_FK FOREIGN KEY (sender_id) REFERENCES users(user_id),
+    CONSTRAINT message_receiver_FK FOREIGN KEY (receiver_id) REFERENCES users(user_id)
 );
 
 -- ====================================
@@ -198,10 +204,10 @@ SELECT * FROM messages;
 -- ====================================
 
 -- Drop existing views
-DELETE VIEW IF EXISTS user_statuses;
-DELETE VIEW IF EXISTS user_posts;
-DELETE VIEW IF EXISTS post_comments;
-DELETE VIEW IF EXISTS post_likes_count;
+DROP VIEW IF EXISTS user_statuses;
+DROP VIEW IF EXISTS user_posts;
+DROP VIEW IF EXISTS post_comments;
+DROP VIEW IF EXISTS post_likes_count;
 
 CREATE VIEW user_statuses AS
 SELECT u.user_id, u.first_name, u.last_name, s.name AS status
@@ -228,46 +234,74 @@ LEFT JOIN likes l ON p.post_id = l.post_id
 -- ====================================
 
 -- Create user
-DROP USER IF EXISTS 'social_network-user'@'localhost';
-CREATE USER 'social_network-user'@'localhost' IDENTIFIED BY 'w11xBg50G2t4YtC1BlbQ';
+DROP USER IF EXISTS 'social-network-user'@'localhost';
+CREATE USER 'social-network-user'@'localhost' IDENTIFIED BY 'w11xBg50G2t4YtC1BlbQ';
 
 -- Grant privileges
-GRANT SELECT ON `social_network`.statuses TO 'social_network-user'@'localhost';
-GRANT INSERT ON `social_network`.statuses TO 'social_network-user'@'localhost';
-GRANT UPDATE ON `social_network`.statuses TO 'social_network-user'@'localhost';
-GRANT DELETE ON `social_network`.statuses TO 'social_network-user'@'localhost';
+GRANT SELECT ON `social_network`.statuses TO 'social-network-user'@'localhost';
+GRANT INSERT ON `social_network`.statuses TO 'social-network-user'@'localhost';
+GRANT UPDATE ON `social_network`.statuses TO 'social-network-user'@'localhost';
+GRANT DELETE ON `social_network`.statuses TO 'social-network-user'@'localhost';
 
-GRANT SELECT ON `social_network`.users TO 'social_network-user'@'localhost';
-GRANT INSERT ON `social_network`.users TO 'social_network-user'@'localhost';
-GRANT UPDATE ON `social_network`.users TO 'social_network-user'@'localhost';
-GRANT DELETE ON `social_network`.users TO 'social_network-user'@'localhost';
+GRANT SELECT ON `social_network`.users TO 'social-network-user'@'localhost';
+GRANT INSERT ON `social_network`.users TO 'social-network-user'@'localhost';
+GRANT UPDATE ON `social_network`.users TO 'social-network-user'@'localhost';
+GRANT DELETE ON `social_network`.users TO 'social-network-user'@'localhost';
 
-GRANT SELECT ON `social_network`.friendships TO 'social_network-user'@'localhost';
-GRANT INSERT ON `social_network`.friendships TO 'social_network-user'@'localhost';
-GRANT UPDATE ON `social_network`.friendships TO 'social_network-user'@'localhost';
-GRANT DELETE ON `social_network`.friendships TO 'social_network-user'@'localhost';
+GRANT SELECT ON `social_network`.friendships TO 'social-network-user'@'localhost';
+GRANT INSERT ON `social_network`.friendships TO 'social-network-user'@'localhost';
+GRANT UPDATE ON `social_network`.friendships TO 'social-network-user'@'localhost';
+GRANT DELETE ON `social_network`.friendships TO 'social-network-user'@'localhost';
 
-GRANT SELECT ON `social_network`.posts TO 'social_network-user'@'localhost';
-GRANT INSERT ON `social_network`.posts TO 'social_network-user'@'localhost';
-GRANT UPDATE ON `social_network`.posts TO 'social_network-user'@'localhost';
-GRANT DELETE ON `social_network`.posts TO 'social_network-user'@'localhost';
+GRANT SELECT ON `social_network`.posts TO 'social-network-user'@'localhost';
+GRANT INSERT ON `social_network`.posts TO 'social-network-user'@'localhost';
+GRANT UPDATE ON `social_network`.posts TO 'social-network-user'@'localhost';
+GRANT DELETE ON `social_network`.posts TO 'social-network-user'@'localhost';
 
-GRANT SELECT ON `social_network`.comments TO 'social_network-user'@'localhost';
-GRANT INSERT ON `social_network`.comments TO 'social_network-user'@'localhost';
-GRANT UPDATE ON `social_network`.comments TO 'social_network-user'@'localhost';
-GRANT DELETE ON `social_network`.comments TO 'social_network-user'@'localhost';
+GRANT SELECT ON `social_network`.comments TO 'social-network-user'@'localhost';
+GRANT INSERT ON `social_network`.comments TO 'social-network-user'@'localhost';
+GRANT UPDATE ON `social_network`.comments TO 'social-network-user'@'localhost';
+GRANT DELETE ON `social_network`.comments TO 'social-network-user'@'localhost';
 
-GRANT SELECT ON `social_network`.likes TO 'social_network-user'@'localhost';
-GRANT INSERT ON `social_network`.likes TO 'social_network-user'@'localhost';
-GRANT UPDATE ON `social_network`.likes TO 'social_network-user'@'localhost';
-GRANT DELETE ON `social_network`.likes TO 'social_network-user'@'localhost';
+GRANT SELECT ON `social_network`.likes TO 'social-network-user'@'localhost';
+GRANT INSERT ON `social_network`.likes TO 'social-network-user'@'localhost';
+GRANT UPDATE ON `social_network`.likes TO 'social-network-user'@'localhost';
+GRANT DELETE ON `social_network`.likes TO 'social-network-user'@'localhost';
 
-GRANT SELECT ON `social_network`.notifications TO 'social_network-user'@'localhost';
-GRANT INSERT ON `social_network`.notifications TO 'social_network-user'@'localhost';
-GRANT UPDATE ON `social_network`.notifications TO 'social_network-user'@'localhost';
-GRANT DELETE ON `social_network`.notifications TO 'social_network-user'@'localhost';
+GRANT SELECT ON `social_network`.notifications TO 'social-network-user'@'localhost';
+GRANT INSERT ON `social_network`.notifications TO 'social-network-user'@'localhost';
+GRANT UPDATE ON `social_network`.notifications TO 'social-network-user'@'localhost';
+GRANT DELETE ON `social_network`.notifications TO 'social-network-user'@'localhost';
 
-GRANT SELECT ON `social_network`.messages TO 'social_network-user'@'localhost';
-GRANT INSERT ON `social_network`.messages TO 'social_network-user'@'localhost';
-GRANT UPDATE ON `social_network`.messages TO 'social_network-user'@'localhost';
-GRANT DELETE ON `social_network`.messages TO 'social_network-user'@'localhost';
+GRANT SELECT ON `social_network`.messages TO 'social-network-user'@'localhost';
+GRANT INSERT ON `social_network`.messages TO 'social-network-user'@'localhost';
+GRANT UPDATE ON `social_network`.messages TO 'social-network-user'@'localhost';
+GRANT DELETE ON `social_network`.messages TO 'social-network-user'@'localhost';
+
+-- ====================================
+-- Exemple de requêtes
+-- ====================================
+
+-- Get all users with their status
+SELECT * FROM user_statuses;
+
+-- Get all posts with their author, who liked them and how many likes they have
+SELECT p.post_id, p.content, u.first_name, u.last_name, COUNT(l.like_id) AS likes_count
+FROM posts p
+JOIN users u ON p.user_id = u.user_id
+LEFT JOIN likes l ON p.post_id = l.post_id
+GROUP BY p.post_id;
+
+-- Get all comments on posts with their author
+SELECT p.post_id, p.content AS post_content, c.comment_id, c.content AS comment_content, u.first_name, u.last_name
+FROM posts p
+JOIN comments c ON p.post_id = c.post_id
+JOIN users u ON c.user_id = u.user_id;
+
+-- Get all unread messages
+SELECT * FROM messages WHERE read_at IS NULL;
+
+-- Update the status of a user
+UPDATE users
+SET id_status = 3
+WHERE user_id = 1;
